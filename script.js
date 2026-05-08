@@ -515,6 +515,16 @@ function exportReport(format) {
                   "Выполнено: " + tasks.filter(function(t) { return t.completed; }).length + "\n" +
                   "Открыто: " + tasks.filter(function(t) { return !t.completed; }).length + "\n";
 
+    if (format === "word") {
+        exportToWord(title, summary);
+    } else if (format === "excel") {
+        exportToExcel(title, summary);
+    } else if (format === "ppt") {
+        exportToPowerPoint(title, summary);
+    }
+}
+
+function exportToWord(title, summary) {
     var rows = tasks.map(function(t) {
         return "<tr>" +
             "<td>" + t.text + "</td>" +
@@ -534,13 +544,100 @@ function exportReport(format) {
                "<p>" + summary.replace(/\n/g, "<br>") + "</p>" +
                table + "</body></html>";
 
-    if (format === "word") {
-        downloadFile("task_report.doc", html, "application/msword");
-    } else if (format === "excel") {
-        downloadFile("task_report.xls", html, "application/vnd.ms-excel");
-    } else if (format === "ppt") {
-        downloadFile("task_report.ppt", html, "application/vnd.ms-powerpoint");
-    }
+    downloadFile("task_report.doc", html, "application/msword");
+}
+
+function exportToExcel(title, summary) {
+    var data = [];
+    data.push(["Отчёт по задачам"]);
+    data.push([]);
+    data.push(["Пользователь:", currentUser]);
+    data.push(["Всего задач:", tasks.length]);
+    data.push(["Выполнено:", tasks.filter(function(t) { return t.completed; }).length]);
+    data.push(["Открыто:", tasks.filter(function(t) { return !t.completed; }).length]);
+    data.push([]);
+    data.push(["Задача", "Приоритет", "Дата", "Тег", "Статус"]);
+
+    tasks.forEach(function(t) {
+        data.push([
+            t.text,
+            t.priority,
+            t.deadline ? formatDate(t.deadline) : "",
+            t.tag || "",
+            t.completed ? "Выполнено" : "Открыто"
+        ]);
+    });
+
+    var ws = XLSX.utils.aoa_to_sheet(data);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Отчёт");
+    XLSX.writeFile(wb, "task_report.xlsx");
+}
+
+function exportToPowerPoint(title, summary) {
+    var pres = new PptxGenJS();
+    pres.defineLayout({ name: 'LAYOUT1', width: 10, height: 7.5 });
+    pres.layout = 'LAYOUT1';
+
+    var slide1 = pres.addSlide();
+    slide1.background = { color: "5b8dee" };
+    slide1.addText(title, {
+        x: 0.5, y: 2.5, w: 9, h: 1,
+        fontSize: 44, bold: true, color: "ffffff", align: "center"
+    });
+    slide1.addText("Отчёт выполненных тасков", {
+        x: 0.5, y: 4, w: 9, h: 1,
+        fontSize: 24, color: "ffffff", align: "center"
+    });
+
+    var slide2 = pres.addSlide();
+    slide2.addText("Показатели", {
+        x: 0.5, y: 0.5, w: 9, h: 0.5,
+        fontSize: 28, bold: true
+    });
+
+    var totalCompleted = tasks.filter(function(t) { return t.completed; }).length;
+    var totalPending = tasks.filter(function(t) { return !t.completed; }).length;
+
+    var stats = [
+        ["Параметр", "Значение"],
+        ["Всего задач", tasks.length.toString()],
+        ["Выполнено", totalCompleted.toString()],
+        ["Открыто", totalPending.toString()],
+        ["Процент выполнения", tasks.length > 0 ? Math.round((totalCompleted / tasks.length) * 100) + "%" : "0%"]
+    ];
+
+    slide2.addTable(stats, {
+        x: 1, y: 1.5, w: 8, h: 2,
+        border: { pt: 1, color: "cccccc" },
+        fill: { color: "ffffff" },
+        fontSize: 14
+    });
+
+    var slide3 = pres.addSlide();
+    slide3.addText("Список задач", {
+        x: 0.5, y: 0.5, w: 9, h: 0.5,
+        fontSize: 28, bold: true
+    });
+
+    var tableData = [["Номер", "Задача", "Приоритет", "Статус"]];
+    tasks.slice(0, 10).forEach(function(t, i) {
+        tableData.push([
+            (i + 1).toString(),
+            t.text.substring(0, 25),
+            t.priority,
+            t.completed ? "✓" : "✗"
+        ]);
+    });
+
+    slide3.addTable(tableData, {
+        x: 0.5, y: 1.2, w: 9, h: 4.5,
+        border: { pt: 1, color: "cccccc" },
+        fill: { color: "f0f0f0" },
+        fontSize: 12
+    });
+
+    pres.save({ fileName: "task_report.pptx" });
 }
 
 function initProfileButtons() {
