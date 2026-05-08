@@ -1,266 +1,397 @@
 <!-- ============================ index.html ============================ -->
+<!--
+  ╔══════════════════════════════════════════════════════════╗
+  ║          TO-DO LIST — Планировщик задач                  ║
+  ║  Файл: index.html                                        ║
+  ║  Описание: Главная HTML-разметка приложения.             ║
+  ║  Здесь описаны все экраны: авторизация и основное        ║
+  ║  приложение (входящие, сегодня, планы, календарь,        ║
+  ║  проекты, архив, профиль).                               ║
+  ╚══════════════════════════════════════════════════════════╝
+-->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <!-- Масштабирование: ширина = ширина устройства, без автомасштабирования -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> To-Do List веб-приложение (планировщик задач)</title>
-    <!-- logo.png = иконка вкладки браузера -->
+    <title>To-Do List — Планировщик задач</title>
+
+    <!-- Иконка вкладки браузера (favicon) -->
     <link rel="icon" href="logo.png" type="image/png">
+
+    <!-- Подключение шрифтов Google Fonts (Nunito) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Наши стили -->
     <link rel="stylesheet" href="styles.css">
+
+    <!--
+        ═══ ВНЕШНИЕ БИБЛИОТЕКИ (CDN) ═══
+        Подключаем в <head>, чтобы они точно загрузились до script.js
+    -->
+
+    <!-- SheetJS (XLSX) — экспорт в Excel (.xlsx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- PptxGenJS — экспорт в PowerPoint (.pptx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
 </head>
 <body>
 
-    <!-- Экран входа и регистрации -->
-    <div class="auth-screen" id="authScreen">
-        <div class="auth-card">
-            <img src="polzovatel.png" alt="Пользователь" class="auth-logo">
-            <h1>Планировщик задач</h1>
-            <p>Войдите или создайте аккаунт, чтобы сохранить задачи для себя.</p>
+<!-- ══════════════════════════════════════════════════════
+     ЭКРАН АВТОРИЗАЦИИ
+     Показывается при первом входе или после выхода.
+     Содержит три формы: вход / регистрация / восстановление пароля.
+     JS-функция showAuth() / showApp() переключает видимость.
+     ══════════════════════════════════════════════════════ -->
+<div class="auth-screen" id="authScreen">
+    <div class="auth-card">
 
-            <div class="auth-tabs">
-                <button type="button" id="switchToLogin" class="auth-tab active">Вход</button>
-                <button type="button" id="switchToRegister" class="auth-tab">Регистрация</button>
-            </div>
+        <!-- Аватар/логотип на экране авторизации -->
+        <img src="polzovatel.png" alt="Пользователь" class="auth-logo">
 
-            <div id="authMessage" class="auth-message"></div>
+        <h1>Планировщик задач</h1>
+        <p>Войдите или создайте аккаунт,<br>чтобы сохранить задачи для себя.</p>
 
-            <form id="authLoginForm" class="auth-form">
-                <input type="text" id="loginUsername" placeholder="Имя пользователя" required>
-                <input type="password" id="loginPassword" placeholder="Пароль" required>
-                <button type="submit" class="primary-btn">Войти</button>
-                <button type="button" id="forgotPasswordBtn" class="auth-link">Забыли пароль?</button>
-            </form>
-
-            <form id="authRegisterForm" class="auth-form" style="display:none;">
-                <input type="text" id="registerUsername" placeholder="Новый логин" required>
-                <input type="email" id="registerEmail" placeholder="Email (example@gmail.com)" required>
-                <input type="password" id="registerPassword" placeholder="Новый пароль" required>
-                <button type="submit" class="primary-btn">Создать аккаунт</button>
-            </form>
-
-            <form id="authRecoverForm" class="auth-form" style="display:none;">
-                <input type="text" id="recoverUsername" placeholder="Имя пользователя" required>
-                <input type="email" id="recoverEmail" placeholder="Email, на который регистрировались" required>
-                <button type="submit" class="primary-btn">Восстановить пароль</button>
-                <button type="button" id="backToLogin" class="auth-link">Вернуться к входу</button>
-            </form>
+        <!-- Вкладки: Вход / Регистрация -->
+        <div class="auth-tabs">
+            <!-- id="switchToLogin" — клик переключает на форму входа -->
+            <button type="button" id="switchToLogin" class="auth-tab active">Вход</button>
+            <!-- id="switchToRegister" — клик переключает на форму регистрации -->
+            <button type="button" id="switchToRegister" class="auth-tab">Регистрация</button>
         </div>
+
+        <!-- Блок для вывода ошибок (красный текст) -->
+        <div id="authMessage" class="auth-message"></div>
+
+        <!-- ─── ФОРМА ВХОДА ─── -->
+        <form id="authLoginForm" class="auth-form">
+            <input type="text"     id="loginUsername" placeholder="Имя пользователя" required autocomplete="username">
+            <input type="password" id="loginPassword" placeholder="Пароль"           required autocomplete="current-password">
+            <button type="submit" class="primary-btn">Войти</button>
+            <!-- Ссылка «Забыли пароль?» → показывает форму восстановления -->
+            <button type="button" id="forgotPasswordBtn" class="auth-link">Забыли пароль?</button>
+        </form>
+
+        <!-- ─── ФОРМА РЕГИСТРАЦИИ (скрыта по умолчанию) ─── -->
+        <form id="authRegisterForm" class="auth-form" style="display:none;">
+            <input type="text"     id="registerUsername" placeholder="Новый логин"           required autocomplete="username">
+            <input type="email"    id="registerEmail"    placeholder="Email (example@gmail.com)" required autocomplete="email">
+            <input type="password" id="registerPassword" placeholder="Новый пароль"          required autocomplete="new-password">
+            <button type="submit" class="primary-btn">Создать аккаунт</button>
+        </form>
+
+        <!-- ─── ФОРМА ВОССТАНОВЛЕНИЯ ПАРОЛЯ (скрыта по умолчанию) ─── -->
+        <form id="authRecoverForm" class="auth-form" style="display:none;">
+            <input type="text"  id="recoverUsername" placeholder="Ваш логин"                   required>
+            <input type="email" id="recoverEmail"    placeholder="Email, на который регистрировались" required>
+            <button type="submit" class="primary-btn">Восстановить пароль</button>
+            <!-- Назад к входу -->
+            <button type="button" id="backToLogin" class="auth-link">← Вернуться к входу</button>
+        </form>
+
     </div>
+</div><!-- /auth-screen -->
 
-    <!-- Затемнение фона на телефоне -->
-    <div class="overlay" id="overlay"></div>
 
-    <div class="app" style="display:none;">
+<!-- ══════════════════════════════════════════════════════
+     ЗАТЕМНЕНИЕ ФОНА (OVERLAY)
+     Появляется когда боковое меню открыто на телефоне/планшете.
+     Клик по overlay закрывает меню.
+     ══════════════════════════════════════════════════════ -->
+<div class="overlay" id="overlay"></div>
 
-        <!-- ===== БОКОВОЕ МЕНЮ ===== -->
-        <aside class="sidebar" id="sidebar">
 
-            <!-- logo.png = логотип в меню -->
-            <div class="sidebar-logo">
-                <img src="logo.png" alt="Логотип">
+<!-- ══════════════════════════════════════════════════════
+     ОСНОВНОЕ ПРИЛОЖЕНИЕ
+     Скрыто до входа (style="display:none;")
+     JS-функция showApp() делает его видимым.
+     ══════════════════════════════════════════════════════ -->
+<div class="app" id="appContainer" style="display:none;">
+
+    <!-- ══════════════════════════════════════════════════
+         КНОПКА ГАМБУРГЕР (показывается только на мобильных)
+         Открывает/закрывает боковое меню.
+         Находится вверху по центру экрана.
+         ══════════════════════════════════════════════════ -->
+    <button class="hamburger" id="hamburger" aria-label="Открыть меню">
+        <!-- menu.png = три горизонтальные полоски -->
+        <img src="menu.png" alt="Меню">
+    </button>
+
+    <!-- ══════════════════════════════════════════════════
+         БОКОВОЕ МЕНЮ (SIDEBAR)
+         На десктопе — всегда видимо слева.
+         На мобильных — выдвигается на всю ширину экрана.
+         ══════════════════════════════════════════════════ -->
+    <aside class="sidebar" id="sidebar">
+
+        <!-- Кнопка закрыть внутри sidebar (видна только на мобильных) -->
+        <button class="sidebar-close" id="sidebarClose" aria-label="Закрыть меню">✕</button>
+
+        <!-- Логотип в верхней части меню -->
+        <div class="sidebar-logo">
+            <img src="logo.png" alt="Логотип приложения">
+        </div>
+
+        <h2>Меню</h2>
+
+        <!-- Навигационный список. data-section — ключ для navigateTo() в JS -->
+        <ul>
+            <!-- Входящие: все активные задачи -->
+            <li class="active" data-section="incoming">
+                <img src="vhodishie.png" class="menu-icon" alt="">
+                Входящие
+            </li>
+            <!-- Сегодня: задачи с дедлайном = сегодня -->
+            <li data-section="today">
+                <img src="kalendar.png" class="menu-icon" alt="">
+                Сегодня
+            </li>
+            <!-- Планы: задачи с будущей датой -->
+            <li data-section="plans">
+                <img src="Pisat.png" class="menu-icon" alt="">
+                Планы
+            </li>
+            <!-- Календарь: все задачи сгруппированы по датам -->
+            <li data-section="calendar">
+                <img src="kalendar.png" class="menu-icon" alt="">
+                Календарь
+            </li>
+            <!-- Проекты: задачи сгруппированы по тегам -->
+            <li data-section="projects">
+                <img src="proeckt.png" class="menu-icon" alt="">
+                Проекты
+            </li>
+            <!-- Архив: выполненные задачи -->
+            <li data-section="archive">
+                <img src="arhiv.png" class="menu-icon" alt="">
+                Архив
+            </li>
+            <!-- Профиль: статистика и экспорт -->
+            <li data-section="profile">
+                <img src="polzovatel.png" class="menu-icon" alt="">
+                Профиль
+            </li>
+        </ul>
+
+    </aside><!-- /sidebar -->
+
+
+    <!-- ══════════════════════════════════════════════════
+         ОСНОВНОЙ КОНТЕНТ
+         Располагается правее sidebar на десктопе,
+         занимает весь экран на мобильных.
+         ══════════════════════════════════════════════════ -->
+    <main class="main-content">
+
+        <!-- ШАПКА: логотип + заголовок + кнопка выход -->
+        <header>
+            <div class="header-inner">
+                <!-- Логотип рядом с заголовком -->
+                <img src="logo.png" class="header-logo" alt="Логотип">
+                <div class="header-text">
+                    <!-- Заголовок меняется при переходе между разделами -->
+                    <h1 id="pageTitle">Планировщик задач</h1>
+                    <p id="pageSubtitle">Добавляйте, выполняйте и удаляйте задачи</p>
+                </div>
+                <!-- Кнопка выхода из аккаунта -->
+                <button id="logoutBtn" class="logout-btn" title="Выйти из аккаунта">
+                    Выйти
+                </button>
             </div>
+        </header>
 
-            <h2>Меню</h2>
 
-            <ul>
-                <!--
-                    vhodishie.png = иконка раздела Входящие
-                    data-section  = имя раздела для JavaScript
-                -->
-                <li class="active" data-section="incoming">
-                    <img src="vhodishie.png" class="menu-icon" alt="">
-                    Входящие
-                </li>
-                <li data-section="today">
-                    <!-- kalendar.png = иконка Сегодня -->
-                    <img src="kalendar.png" class="menu-icon" alt="">
-                    Сегодня
-                </li>
-                <li data-section="plans">
-                    <!-- Pisat.png = иконка Планы -->
-                    <img src="Pisat.png" class="menu-icon" alt="">
-                    Планы
-                </li>
-                <li data-section="calendar">
-                    <!-- kalendar.png = иконка Календарь -->
-                    <img src="kalendar.png" class="menu-icon" alt="">
-                    Календарь
-                </li>
-                <li data-section="projects">
-                    <!-- proeckt.png = иконка Проекты -->
-                    <img src="proeckt.png" class="menu-icon" alt="">
-                    Проекты
-                </li>
-                <li data-section="archive">
-                    <!-- arhiv.png = иконка Архив -->
-                    <img src="arhiv.png" class="menu-icon" alt="">
-                    Архив
-                </li>
-                <li data-section="profile">
-                    <!-- polzovatel.png = иконка Профиль -->
-                    <img src="polzovatel.png" class="menu-icon" alt="">
-                    Профиль
-                </li>
-            </ul>
-        </aside>
+        <!-- ════════════════════════════════════════════
+             РАЗДЕЛ: ВХОДЯЩИЕ
+             Показывается по умолчанию при входе.
+             Содержит форму добавления и список активных задач.
+             ════════════════════════════════════════════ -->
+        <div data-page="incoming">
 
-        <!-- ===== ОСНОВНОЙ КОНТЕНТ ===== -->
-        <main class="main-content">
+            <!-- ФОРМА ДОБАВЛЕНИЯ ЗАДАЧИ -->
+            <section class="task-form">
 
-            <!--
-                menu.png = иконка кнопки гамбургер
-                Показывается только на телефоне/планшете
-            -->
-            <button class="hamburger" id="hamburger">
-                <img src="menu.png" alt="Меню">
-            </button>
+                <!-- Поле ввода задачи с иконкой -->
+                <div class="input-wrap">
+                    <img src="zadacha.png" class="field-icon" alt="">
+                    <input type="text" id="taskInput" placeholder="Введите новую задачу..." autocomplete="off">
+                </div>
 
-            <!-- Заголовок меняется при переключении раздела -->
-            <header>
-                <div class="header-inner">
-                    <!-- logo.png рядом с заголовком -->
-                    <img src="logo.png" class="header-logo" alt="Логотип">
+                <!-- Выбор приоритета -->
+                <select id="priority">
+                    <option value="Низкий">🟢 Низкий</option>
+                    <option value="Средний" selected>🟡 Средний</option>
+                    <option value="Высокий">🔴 Высокий</option>
+                </select>
+
+                <!-- Дата дедлайна -->
+                <input type="date" id="deadline" title="Дедлайн задачи">
+
+                <!-- Тег / проект с иконкой -->
+                <div class="input-wrap">
+                    <img src="proeckt.png" class="field-icon" alt="">
+                    <input type="text" id="tag" placeholder="Тег / проект" autocomplete="off">
+                </div>
+
+                <!-- Кнопка добавить -->
+                <button id="addTaskBtn">
+                    <img src="Pisat.png" class="btn-icon" alt="">
+                    Добавить
+                </button>
+
+            </section><!-- /task-form -->
+
+            <!-- СПИСОК ЗАДАЧ (заполняется через JS renderTasks()) -->
+            <ul id="taskList"></ul>
+
+            <!-- НИЖНЯЯ ПАНЕЛЬ: счётчик + кнопка очистки выполненных -->
+            <footer class="footer">
+                <span id="taskCount">Всего задач: 0</span>
+                <button id="clearCompleted">
+                    <img src="krestiq.png" class="btn-icon" alt="">
+                    Удалить выполненные
+                </button>
+            </footer>
+
+        </div><!-- /data-page="incoming" -->
+
+
+        <!-- ════════════════════════════════════════════
+             РАЗДЕЛ: СЕГОДНЯ
+             Задачи с дедлайном = сегодняшняя дата.
+             Заполняется через JS renderToday().
+             ════════════════════════════════════════════ -->
+        <div data-page="today" style="display:none;">
+            <div class="section-list" id="todayList"></div>
+        </div>
+
+
+        <!-- ════════════════════════════════════════════
+             РАЗДЕЛ: ПЛАНЫ
+             Задачи с дедлайном в будущем.
+             Заполняется через JS renderPlans().
+             ════════════════════════════════════════════ -->
+        <div data-page="plans" style="display:none;">
+            <div class="section-list" id="plansList"></div>
+        </div>
+
+
+        <!-- ════════════════════════════════════════════
+             РАЗДЕЛ: КАЛЕНДАРЬ
+             Все задачи с датами, сгруппированные по дням.
+             Заполняется через JS renderCalendar().
+             ════════════════════════════════════════════ -->
+        <div data-page="calendar" style="display:none;">
+            <div class="section-list" id="calendarList"></div>
+        </div>
+
+
+        <!-- ════════════════════════════════════════════
+             РАЗДЕЛ: ПРОЕКТЫ
+             Задачи сгруппированы по тегам.
+             Заполняется через JS renderProjects().
+             ════════════════════════════════════════════ -->
+        <div data-page="projects" style="display:none;">
+            <div class="section-list" id="projectsList"></div>
+        </div>
+
+
+        <!-- ════════════════════════════════════════════
+             РАЗДЕЛ: АРХИВ
+             Все выполненные задачи.
+             Кнопка "Очистить архив" удаляет их навсегда.
+             Заполняется через JS renderArchive().
+             ════════════════════════════════════════════ -->
+        <div data-page="archive" style="display:none;">
+            <!-- Кнопка очистки архива -->
+            <div class="archive-header">
+                <button id="clearArchiveBtn" class="clear-archive-btn">
+                    <img src="krestiq.png" class="btn-icon" alt="">
+                    Очистить архив
+                </button>
+            </div>
+            <div class="section-list" id="archiveList"></div>
+        </div>
+
+
+        <!-- ════════════════════════════════════════════
+             РАЗДЕЛ: ПРОФИЛЬ
+             Статистика пользователя, кнопки экспорта,
+             таблица и график приоритетов.
+             Заполняется через JS renderProfile().
+             ════════════════════════════════════════════ -->
+        <div data-page="profile" style="display:none;">
+            <section class="profile-card">
+
+                <!-- Заголовок профиля и инфо о пользователе -->
+                <div class="profile-header">
                     <div>
-                        <h1 id="pageTitle">Планировщик задач</h1>
-                        <p id="pageSubtitle">Добавляйте, выполняйте и удаляйте задачи</p>
+                        <h2>Профиль пользователя</h2>
+                        <!-- Имя + email из localStorage -->
+                        <p id="profileInfo">Информация об аккаунте и отчёты.</p>
                     </div>
                 </div>
-                <button id="logoutBtn" class="logout-btn">Выйти</button>
-            </header>
 
-
-            <!-- ===== РАЗДЕЛ: ВХОДЯЩИЕ ===== -->
-            <div data-page="incoming">
-
-                <!-- Форма добавления задачи -->
-                <section class="task-form">
-                    <!--
-                        Pisat.png = иконка карандаша в поле ввода
-                        задача.png = иконка задачи
-                    -->
-                    <div class="input-wrap">
-                        <img src="zadacha.png" class="field-icon" alt="">
-                        <input type="text" id="taskInput" placeholder="Введите новую задачу...">
+                <!-- Блок статистики (4 карточки) -->
+                <div class="profile-stats">
+                    <div class="stats-box">
+                        <span id="totalTasksCount">0</span>
+                        Всего задач
                     </div>
-                    <select id="priority">
-                        <option value="Низкий">🟢 Низкий</option>
-                        <option value="Средний" selected>🟡 Средний</option>
-                        <option value="Высокий">🔴 Высокий</option>
-                    </select>
-                    <input type="date" id="deadline">
-                    <div class="input-wrap">
-                        <img src="proeckt.png" class="field-icon" alt="">
-                        <input type="text" id="tag" placeholder="Тег / проект">
+                    <div class="stats-box">
+                        <span id="completedTasksCount">0</span>
+                        Выполнено
                     </div>
-                    <!--
-                        Pisat.png = иконка на кнопке Добавить
-                    -->
-                    <button id="addTaskBtn">
-                        <img src="Pisat.png" class="btn-icon" alt=""> Добавить
-                    </button>
-                </section>
-
-                <!-- Список задач -->
-                <ul id="taskList"></ul>
-
-                <!-- Нижняя панель -->
-                <footer class="footer">
-                    <span id="taskCount">Всего задач: 0</span>
-                    <!--
-                        krestiq.png = иконка удаления
-                    -->
-                    <button id="clearCompleted">
-                        <img src="krestiq.png" class="btn-icon" alt=""> Удалить выполненные
-                    </button>
-                </footer>
-
-            </div>
-
-
-            <!-- ===== РАЗДЕЛ: СЕГОДНЯ ===== -->
-            <div data-page="today" style="display:none;">
-                <div class="section-list" id="todayList"></div>
-            </div>
-
-            <!-- ===== РАЗДЕЛ: ПЛАНЫ ===== -->
-            <div data-page="plans" style="display:none;">
-                <div class="section-list" id="plansList"></div>
-            </div>
-
-            <!-- ===== РАЗДЕЛ: КАЛЕНДАРЬ ===== -->
-            <div data-page="calendar" style="display:none;">
-                <div class="section-list" id="calendarList"></div>
-            </div>
-
-            <!-- ===== РАЗДЕЛ: ПРОЕКТЫ ===== -->
-            <div data-page="projects" style="display:none;">
-                <div class="section-list" id="projectsList"></div>
-            </div>
-
-            <!-- ===== РАЗДЕЛ: АРХИВ ===== -->
-            <div data-page="archive" style="display:none;">
-                <!--
-                    Кнопка очистки JSONBin — удаляет все выполненные задачи из облака
-                -->
-                <div class="archive-header">
-                    <button id="clearArchiveBtn" class="clear-archive-btn">
-                        <img src="krestiq.png" class="btn-icon" alt=""> Очистить архив
-                    </button>
+                    <div class="stats-box">
+                        <span id="todayTasksCount">0</span>
+                        Сегодня
+                    </div>
+                    <div class="stats-box">
+                        <span id="pendingTasksCount">0</span>
+                        Открытых
+                    </div>
                 </div>
-                <div class="section-list" id="archiveList"></div>
-            </div>
 
-            <!-- ===== РАЗДЕЛ: ПРОФИЛЬ ===== -->
-            <div data-page="profile" style="display:none;">
-                <section class="profile-card">
-                    <div class="profile-header">
-                        <div>
-                            <h2>Профиль пользователя</h2>
-                            <p id="profileInfo">Информация об аккаунте и отчёты.</p>
-                        </div>
-                    </div>
+                <!-- Кнопки экспорта отчётов -->
+                <div class="profile-actions">
+                    <!-- exportToWord() — скачать .doc -->
+                    <button id="exportWordBtn" class="primary-btn">📄 Скачать Word</button>
+                    <!-- exportToExcel() — скачать .xlsx (SheetJS) -->
+                    <button id="exportExcelBtn" class="primary-btn">📊 Скачать Excel</button>
+                    <!-- exportToPowerPoint() — скачать .pptx (PptxGenJS) -->
+                    <button id="exportPptBtn" class="primary-btn">📑 Скачать PowerPoint</button>
+                </div>
 
-                    <div class="profile-stats">
-                        <div class="stats-box">
-                            <span id="totalTasksCount">0</span>
-                            Всего задач
-                        </div>
-                        <div class="stats-box">
-                            <span id="completedTasksCount">0</span>
-                            Выполнено
-                        </div>
-                        <div class="stats-box">
-                            <span id="todayTasksCount">0</span>
-                            Сегодня
-                        </div>
-                        <div class="stats-box">
-                            <span id="pendingTasksCount">0</span>
-                            Открытых
-                        </div>
-                    </div>
+                <!-- Таблица задач -->
+                <div class="report-table-wrapper">
+                    <h3>📋 Таблица задач</h3>
+                    <div id="reportTable"></div>
+                </div>
 
-                    <div class="profile-actions">
-                        <button id="exportWordBtn" class="primary-btn">Скачать Word</button>
-                        <button id="exportExcelBtn" class="primary-btn">Скачать Excel</button>
-                        <button id="exportPptBtn" class="primary-btn">Скачать PowerPoint</button>
-                    </div>
+                <!-- Диаграмма приоритетов -->
+                <div class="report-chart-wrapper">
+                    <h3>📊 График приоритетов</h3>
+                    <div id="reportChart" class="report-chart"></div>
+                </div>
 
-                    <div class="report-table-wrapper">
-                        <h3>Таблица задач</h3>
-                        <div id="reportTable"></div>
-                    </div>
+            </section>
+        </div><!-- /data-page="profile" -->
 
-                    <div class="report-chart-wrapper">
-                        <h3>График приоритетов</h3>
-                        <div id="reportChart"></div>
-                    </div>
-                </section>
-            </div>
+    </main><!-- /main-content -->
 
-        </main>
-    </div>
+</div><!-- /app -->
 
-    <script src="script.js"></script>
+
+<!-- ══════════════════════════════════════════════════════
+     ПОДКЛЮЧЕНИЕ СКРИПТОВ
+     script.js загружается последним — после HTML и библиотек.
+     ══════════════════════════════════════════════════════ -->
+<script src="script.js"></script>
+
 </body>
 </html>
