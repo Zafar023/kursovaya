@@ -862,7 +862,7 @@ function exportToExcel(title) {
 function exportToPowerPoint(title) {
     // Проверяем, загружена ли библиотека
     if (typeof PptxGenJS === "undefined") {
-        alert("Ошибка: библиотека PptxGenJS не загружена. Проверьте интернет-соединение.");
+        alert("Функция экспорта в PowerPoint временно недоступна. Используйте экспорт в Excel или Word.");
         return;
     }
 
